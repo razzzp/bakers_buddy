@@ -46,13 +46,16 @@ class _DatePickerState extends State<DatePicker> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
-    _isModifiable = widget.isModifiable;
+    // not called again when setState is called in the parrent widget
+    //_isModifiable = widget.isModifiable;
     _textCtr = widget.controller;
     _textCtr.text = DateFormat.yMd().format(_selectedDate.toLocal());
   }
 
   @override
   Widget build(BuildContext context) {
+    //make sure to take latest value from widget
+    _isModifiable = widget.isModifiable;
     // text field and button to show date picker in one row
     return Row(
       children: [
@@ -150,6 +153,11 @@ class _OrderDetailsState extends State<OrderDetails> {
   final _sellingPriceTextCtr = TextEditingController();
   final _numberFormatter =
       FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'));
+  Status _orderStatus = Status.pending;
+
+  void _setModifiable(bool modifiable){
+    setState(()=>_isModifiable = modifiable);
+  }
 
   void _validateFields() {
     // TODO: implement validation
@@ -159,10 +167,23 @@ class _OrderDetailsState extends State<OrderDetails> {
     final result = Order(
       widget.myOrder.id, 
       _nameTextCtr.text,
+      status: _orderStatus,
       dueDate: DateFormat.yMd().parse(_dueDateTextCtr.text),
-      margin: double.parse(_marginTextCtr.text),
-      sellingPrice: double.parse(_sellingPriceTextCtr.text));
+      margin: double.tryParse(_marginTextCtr.text),
+      sellingPrice: double.tryParse(_sellingPriceTextCtr.text));
     Navigator.pop(context, result);
+  }
+
+  void _cancelOrder(){
+    if(_isModifiable){
+      _setModifiable(false);
+    } else {
+      Navigator.pop(context, null);
+    }
+  }
+
+  void _editOrder(){
+    _setModifiable(true);
   }
 
   @override
@@ -172,6 +193,7 @@ class _OrderDetailsState extends State<OrderDetails> {
     // initialize fields from widget
     _isModifiable = widget.isModifiable;
     _nameTextCtr.text = widget.myOrder.name;
+    _orderStatus = widget.myOrder.status;
     if (widget.myOrder.dueDate != null) {
       _dueDateTextCtr.text = DateFormat.yMd().format(widget.myOrder.dueDate!);
     }
@@ -196,6 +218,18 @@ class _OrderDetailsState extends State<OrderDetails> {
             controller: _nameTextCtr,
             isReadOnly: !_isModifiable,
           ),
+          
+          DropdownButton<Status>(
+            //initail value
+            value: _orderStatus,
+            //changes Status enums to a list of DropdownMenuItem<Status>
+            items: Status.values.map<DropdownMenuItem<Status>>(
+              (e) => DropdownMenuItem<Status>(value: e, child: Text(e.toString()))).toList(),
+            // if not moidifiable set to null to disable
+            onChanged: _isModifiable ? (curStatus) => {
+              setState(()=>_orderStatus = curStatus ?? Status.pending)
+            } : null,
+          ),
           DatePickerWithLabel(
             label: 'Due Date',
             initialDate: DateTime.now(),
@@ -213,10 +247,12 @@ class _OrderDetailsState extends State<OrderDetails> {
             isReadOnly: !_isModifiable,
             inputFormatters: [_numberFormatter],
           ),
-          TextButton(
-            onPressed: _returnOrder,
-            child: const Text('Save'),
-          )
+          Row(children: [
+            // build Save / Edit button, depending on iSModifiable
+            _isModifiable ? TextButton(onPressed: _returnOrder,child: const Text('Save'))
+              : TextButton(onPressed: _editOrder,child: const Text('Edit')),              
+            TextButton(onPressed: _cancelOrder, child: const Text('Cancel'))
+          ],)
         ])));
   }
 }

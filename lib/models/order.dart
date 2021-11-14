@@ -1,8 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 
+enum Status {
+  pending,
+  inProgress,
+  done
+}
+
 class Order {
   int id;
   String name;
+  Status status;
   DateTime? dueDate;
   List<String>? myIngredients;
   double? costs;
@@ -10,8 +17,8 @@ class Order {
   double? sellingPrice;
 
 
-  Order(this.id, this.name, {this.dueDate, this.myIngredients, this.costs, this.margin, this.sellingPrice});
-  
+  Order(this.id, this.name,{ this.status = Status.pending, this.dueDate, this.myIngredients, this.costs, this.margin, this.sellingPrice});
+
   factory Order.from(Order order){
     return Order(
       order.id,

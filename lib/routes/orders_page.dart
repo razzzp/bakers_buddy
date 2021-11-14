@@ -1,3 +1,4 @@
+import 'package:bakers_buddy/models/orders_db.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:bakers_buddy/models/order.dart';
@@ -16,6 +17,7 @@ class OrdersPage extends StatefulWidget {
 class _OrdersPageState extends State<OrdersPage> {
   int _count = 0;
   final List<Order> _orders = <Order>[];
+  final db = OrdersDB();
   
   Future<Order?> _navigateToOrderDetails(Order order, bool isModifiable) async {
     return Navigator.push(
@@ -27,18 +29,41 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  void _addNewOrder() async {
-    final Order? newOrder = await _navigateToOrderDetails(Order(_count, 'New Order'), true);
+  // updates the local list of Orders
+  // called after updating db
+  void updateListFromDB(Order order){
     setState(() {
-      if(newOrder != null){
-        _orders.add(newOrder);
+      bool orderFound = false;
+      for (int i =0;i<_orders.length;i++){
+        Order curOrder = _orders[i];
+        if(curOrder.id == order.id){
+          _orders[i] = order;
+          orderFound= true;
+        }
+      }
+      if (!orderFound){
+        //means order just added
+        // is this logic ok??
+        _orders.add(order);
         _count++;
       }
     });
   }
+
+  void _addNewOrder() async {
+    final Order? newOrder = await _navigateToOrderDetails(Order(_count, 'New Order'), true);
+      if(newOrder != null){
+        db.addOrder(newOrder);
+        updateListFromDB(newOrder);
+      }
+  }
   
   void _viewOrModifyOrder(Order order) async{
     final Order? newOrder = await _navigateToOrderDetails(order, false);
+      if(newOrder != null){
+        db.updateOrder(newOrder.id, newOrder);
+        updateListFromDB(newOrder);
+      }
   }
 
   Widget _buildOrderCard(Order order){
