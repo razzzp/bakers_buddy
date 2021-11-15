@@ -6,6 +6,20 @@ enum Status {
   done
 }
 
+extension StatusEx on Status{
+  // returns a presentable string
+  String asString(){
+    switch (this){
+      case Status.pending:
+        return 'Pending';
+      case Status.inProgress:
+        return 'In Progess';
+      case Status.done:
+        return 'Done';
+    }
+  }
+}
+
 class Order {
   int id;
   String name;

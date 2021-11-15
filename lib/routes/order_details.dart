@@ -47,7 +47,7 @@ class _DatePickerState extends State<DatePicker> {
     super.initState();
     _selectedDate = widget.initialDate;
     // not called again when setState is called in the parrent widget
-    //_isModifiable = widget.isModifiable;
+    // _isModifiable = widget.isModifiable;
     _textCtr = widget.controller;
     _textCtr.text = DateFormat.yMd().format(_selectedDate.toLocal());
   }
@@ -104,33 +104,11 @@ class DatePickerWithLabel extends StatelessWidget {
   }
 }
 
-class TextFormFieldWithLabel extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final bool isReadOnly;
-  final List<TextInputFormatter>? inputFormatters;
-
-  const TextFormFieldWithLabel({
-    Key? key,
-    required this.label,
-    required this.controller,
-    this.isReadOnly = true,
-    this.inputFormatters,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    // a label and text field stacked on top of each other
-    return Column(
-      children: [
-        Text(label),
-        TextFormField(
-          readOnly: isReadOnly,
-          controller: controller,
-          inputFormatters: inputFormatters,
-        )
-      ],
-    );
+Widget attachLabelToWidget(String label, Widget widget, {bool isVertical = true}){
+  if (isVertical){
+    return Column(children: [Text(label), widget]);
+  }else{
+    return Row(children: [Text(label), widget]);
   }
 }
 
@@ -208,44 +186,56 @@ class _OrderDetailsState extends State<OrderDetails> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Oder Details'),
-        ),
-        body: Center(
-            child: Column(children: [
-          TextFormFieldWithLabel(
-            label: 'Name',
+      appBar: AppBar(
+        title: const Text('Oder Details'),
+      ),
+      body: Center(
+        child: Column(children: [
+          attachLabelToWidget(
+            'Name',
+            TextFormField(
             controller: _nameTextCtr,
-            isReadOnly: !_isModifiable,
+            readOnly: !_isModifiable,
+            ),
           ),
-          
-          DropdownButton<Status>(
+          attachLabelToWidget(
+            'Status',
+            DropdownButton<Status>(
             //initail value
-            value: _orderStatus,
-            //changes Status enums to a list of DropdownMenuItem<Status>
-            items: Status.values.map<DropdownMenuItem<Status>>(
-              (e) => DropdownMenuItem<Status>(value: e, child: Text(e.toString()))).toList(),
-            // if not moidifiable set to null to disable
-            onChanged: _isModifiable ? (curStatus) => {
-              setState(()=>_orderStatus = curStatus ?? Status.pending)
-            } : null,
+              value: _orderStatus,
+              //changes Status enums to a list of DropdownMenuItem<Status>
+              items: Status.values.map<DropdownMenuItem<Status>>(
+                (e) => DropdownMenuItem<Status>(value: e, child: Text(e.asString()))).toList(),
+              // if not moidifiable set to null to disable
+              onChanged: _isModifiable ? (curStatus) => {
+                setState(()=>_orderStatus = curStatus ?? Status.pending)
+              } : null,
+            ),
+            isVertical: false
           ),
-          DatePickerWithLabel(
-            label: 'Due Date',
-            initialDate: DateTime.now(),
-            isModifiable: _isModifiable,
-            controller: _dueDateTextCtr),
-          TextFormFieldWithLabel(
-            label: 'Margin',
-            controller: _marginTextCtr,
-            isReadOnly: !_isModifiable,
-            inputFormatters: [_numberFormatter],
+          attachLabelToWidget(
+            'Due Date',
+            DatePicker(
+              initialDate: DateTime.now(),
+              controller: _dueDateTextCtr,
+              isModifiable: _isModifiable,
+            )
           ),
-          TextFormFieldWithLabel(
-            label: 'Selling Price',
-            controller: _sellingPriceTextCtr,
-            isReadOnly: !_isModifiable,
-            inputFormatters: [_numberFormatter],
+          attachLabelToWidget(
+            'Margin',
+            TextFormField(
+              controller: _marginTextCtr,
+              readOnly: !_isModifiable,
+              inputFormatters: [_numberFormatter],
+            )
+          ),
+          attachLabelToWidget(
+            'Selling Price',
+            TextFormField(
+              controller: _sellingPriceTextCtr,
+              readOnly: !_isModifiable,
+              inputFormatters: [_numberFormatter],
+            )
           ),
           Row(children: [
             // build Save / Edit button, depending on iSModifiable
@@ -253,6 +243,8 @@ class _OrderDetailsState extends State<OrderDetails> {
               : TextButton(onPressed: _editOrder,child: const Text('Edit')),              
             TextButton(onPressed: _cancelOrder, child: const Text('Cancel'))
           ],)
-        ])));
+        ])
+      )
+    );
   }
 }
