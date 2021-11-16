@@ -187,7 +187,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Oder Details'),
+        title: const Text('Order Details'),
       ),
       body: Center(
         child: Column(children: [
