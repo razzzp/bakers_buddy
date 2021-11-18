@@ -116,13 +116,21 @@ class _OrdersListState extends State<OrdersList> {
     return ListTile(
       onTap: () => _viewOrModifyOrder(order),
       title: Card(
-        child: Column(
-          children: [
-            Text(order.name),
-            Text(order.status.asString())
-          ],
-        ),
         margin: const EdgeInsets.fromLTRB(5, 10, 5, 10),
+        child: 
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                child: Text(order.name),
+                margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                ),
+              Text(order.status.asString())
+            ],
+          ),
+        ),
     ));
   }
 
@@ -137,6 +145,10 @@ class _OrdersListState extends State<OrdersList> {
   void updateListFromDBWithoutSetState(){
     _orders.clear();
     _orders = _db.queryOrders(status: _statusFilters);
+    //sort by status
+    _orders.sort((orderA, orderB){
+      return orderA.status.asInt().compareTo(orderB.status.asInt());
+    });
   }
 
   OrdersList setStatusFilters(Set<Status> statusFilters){

@@ -18,6 +18,16 @@ extension StatusEx on Status{
         return 'Done';
     }
   }
+  int asInt(){
+    switch (this){
+      case Status.pending:
+        return 1;
+      case Status.inProgress:
+        return 0;
+      case Status.done:
+        return 2;
+    }
+  }
 }
 
 class Order {
